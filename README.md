@@ -1,32 +1,22 @@
 # LAST STAND / 最后防线
 
-雨夜末日军事题材的网页端 3D 第一人称射击战役。场景、人物、枪械、天气、粒子和音效均由程序化几何、材质与 Web Audio 合成生成，不使用外部模型、贴图或音频素材。
+雨夜末日军事题材的网页端 3D 第一人称射击战役。主游戏由程序化几何、材质、天气、粒子和 Web Audio 合成生成，不使用外部模型、贴图或音频素材。
 
 ## 在线游玩
 
 - 游戏入口：[`dist/index.html`](dist/index.html)
-- 使用桌面端现代浏览器通过 HTTP 访问，不能只下载入口 HTML。
-- 入口会读取 `dist/payload/00.b64` 至 `07.b64`，组合后解压完整游戏页面。
-- 游戏使用 Three.js r180 官方 CDN 模块，首次运行需要访问 CDN。
-- 将仓库根目录发布到 GitHub Pages 后，可访问 `/dist/`。
+- 通过 HTTP 访问入口；不能只下载 HTML 文件，因为它会读取同目录的压缩资源段。
+- 游戏入口会依次读取 `dist/payload/00.b64` 至 `07.b64`，合并解压后启动完整游戏页面。
+- 运行时使用 Three.js r180 官方 CDN 模块，首次启动需要网络访问 CDN。
+- 可以把仓库的 `/dist` 目录作为 GitHub Pages 发布目录，再访问站点根路径。
 
-## 本地运行
-
-完整源码构建器使用 Node.js 内置 API，不需要安装 npm 依赖：
-
-```bash
-cd work
-npm test
-npm run build
-```
-
-构建会生成单个 `dist/index.html` 游戏页面。运行时需访问 Three.js CDN。推荐从仓库根目录启动静态服务器：
+本地预览（在仓库根目录运行）：
 
 ```bash
 python -m http.server 8000
 ```
 
-打开 `http://localhost:8000/dist/`。浏览器对 `file://` 下的 ES 模块和 fetch 有安全限制，推荐使用 HTTP 服务器。
+打开 `http://localhost:8000/dist/`。
 
 ## 操作
 
@@ -51,36 +41,15 @@ python -m http.server 8000
 - 七种正向结局：S1—S3、E1—E3 与 H1。机枪组始终留守；三辆坦克一辆留下、两辆撤离，乘员存活。
 - 结局评分：平民救援 0.5、坦克完好度 0.2、坚守时长 0.18、机枪组留守时长 0.12。
 
-## 工程结构
+## 工程与验证
 
-```text
-.github/workflows/ci.yml   GitHub Actions 测试与构建
-work/
-  index.template.html      HTML / HUD 模板
-  package.json             Node.js 项目脚本
-  scripts/build.mjs        单文件构建器
-  src/core.js              武器、结局、FSM、A*、空间哈希等逻辑
-  src/main.js              Three.js 游戏主体
-  test/core.test.js        核心逻辑单元测试
-dist/index.html             游戏入口
-dist/payload/*.b64          压缩游戏页面资源分段
-tmp/.gitkeep                临时目录占位
-```
+仓库当前提交的是可运行游戏入口、完整压缩游戏页面资源段、项目说明和 CI 工作流。独立源码工程包也随本次交付提供；本仓库当前未包含未压缩的 `work/src` 工程目录。
 
-## 测试与构建
+核心逻辑使用 Node.js 内置测试运行器，覆盖武器配置、结局评分与分支、换弹状态、Blackboard / FSM、A* 禁止切角和空间哈希分离。CI 会在 push 和 pull request 时运行测试与单文件构建检查。
 
-```bash
-cd work
-npm test
-npm run build
-```
+## 技术边界
 
-测试使用 Node.js 内置测试运行器，覆盖武器表、评分与七种结局、换弹逻辑、Blackboard / FSM、A* 禁止切角和空间哈希分离。CI 会在 push 与 pull request 时执行测试和构建。
-
-## 技术说明与边界
-
-- Three.js r180 通过官方 CDN 加载；场景与声音为程序化生成，不加载外部美术素材。
+- Three.js r180 通过官方 CDN 加载；模型、场景和声音均为程序化生成。
 - 单玩家本地战役，无联网联机、账号或云存档。
-- AI 已拆分 Blackboard 感知、带驻留时间的 FSM、A* 寻路工具和空间哈希分离模块；当前实时战斗单位使用直接追击与局部避让以优先保证节奏和帧率，A* 工具已独立测试，尚未接管所有实时单位。
-- 这是首版可玩战役实现，不等同于高预算商业 FPS；复杂小队战术、真实动画骨骼资产与物理材质穿透仍有后续深化空间。
-- 当前自动化容器无法访问外部 CDN，因此已完成静态构建和核心单元测试，但真实 WebGL 渲染仍需在可访问 CDN 的桌面浏览器复核。
+- AI 已实现 Blackboard 感知、带最短驻留时间与排队的 FSM、A* 寻路工具和空间哈希分离模块；当前场景中的感染体和队友主要采用直接追击与局部避让，以优先保证战斗节奏和帧率。A* 工具已经单独测试，尚未接管全部实时单位。
+- 当前自动化环境无法访问外部 CDN，因此静态构建和核心单元测试已完成，但真实 WebGL 渲染仍需在可访问 CDN 的桌面浏览器复核。
