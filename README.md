@@ -8,7 +8,7 @@
 - 通过 HTTP 访问入口；不能只下载 HTML 文件，因为它会读取同目录的压缩资源段。
 - 游戏入口会依次读取 `dist/payload/00.b64` 至 `07.b64`，合并解压后启动完整游戏页面。
 - 运行时使用 Three.js r180 官方 CDN 模块，首次启动需要网络访问 CDN。
-- 可以把仓库的 `/dist` 目录作为 GitHub Pages 发布目录，再访问站点根路径。
+- 已加入 Pages 自动部署工作流。首次发布前，请在仓库 Settings → Pages → Build and deployment 中把 Source 设为 GitHub Actions；之后 push 到 main 且修改 dist/ 时会自动发布。
 
 本地预览（在仓库根目录运行）：
 
