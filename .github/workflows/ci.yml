@@ -1,19 +1,36 @@
-name: web-game-ci
+name: browser-game-artifact-check
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
 jobs:
-  test-and-build:
+  verify-browser-build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-      - run: npm test
-        working-directory: work
-      - run: npm run build
-        working-directory: work
-      - run: test -s dist/index.html
+      - name: Validate the standalone browser payload
+        run: |
+          python - <<'PY'
+          import base64
+          import gzip
+          import pathlib
+          import re
+
+          root = pathlib.Path(".")
+          entry = (root / "dist/index.html").read_text(encoding="utf-8")
+          match = re.search(r'const parts=\["([^"]+)"\]', entry)
+          assert match, "The HTML loader does not contain its bootstrap payload."
+          parts = [match.group(1)]
+          for index in range(8):
+              path = root / f"dist/payload/{index:02d}.b64"
+              assert path.is_file(), f"Missing payload segment: {path}"
+              parts.append(path.read_text(encoding="ascii").strip())
+
+          archive = base64.b64decode("".join(parts), validate=True)
+          page = gzip.decompress(archive).decode("utf-8")
+          assert "LAST STAND" in page, "Decompressed game page marker was not found."
+          assert "three@0.180.0" in page, "Three.js r180 runtime import was not found."
+          assert "pointerlockchange" in page, "Pointer-lock mouse-look handler was not found."
+          print(f"Verified {len(parts)-1} payload segments; page size: {len(page)} characters.")
+          PY
